@@ -72,10 +72,10 @@ if [ "$change_thresh" = "y" ] || [ "$change_thresh" = "Y" ]; then
     new_fail=$(read_threshold "  Failure threshold % (default 50): ")
 
     if [ -n "$new_warn" ]; then
-        sed -i.bak "s/\"warning_threshold\": [0-9]*/\"warning_threshold\": $new_warn/" "$DIR/Helpers/config.json"
+        sed -i.bak "s/\"warning\": [0-9]*/\"warning\": $new_warn/" "$DIR/Helpers/config.json"
     fi
     if [ -n "$new_fail" ]; then
-        sed -i.bak "s/\"failure_threshold\": [0-9]*/\"failure_threshold\": $new_fail/" "$DIR/Helpers/config.json"
+        sed -i.bak "s/\"failure\": [0-9]*/\"failure\": $new_fail/" "$DIR/Helpers/config.json"
     fi
     rm -f "$DIR/Helpers/config.json.bak"
     echo "Config updated."
