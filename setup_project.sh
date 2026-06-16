@@ -1,17 +1,31 @@
 #!/bin/bash
 
+set -u
+
+input=""
+DIR=""
+ARCHIVE=""
+
 cleanup() {
     echo ""
     echo "Interrupted! Saving progress..."
-    tar -czf "attendance_tracker_${input}_archive.tar.gz" "attendance_tracker_${input}" 2>/dev/null
-    rm -rf "attendance_tracker_${input}"
-    echo "Saved to: attendance_tracker_${input}_archive.tar.gz"
+
+    if [ -n "$DIR" ] && [ -d "$DIR" ]; then
+        ARCHIVE="${DIR}_archive.tar.gz"
+        tar -czf "$ARCHIVE" "$DIR" 2>/dev/null
+        rm -rf "$DIR"
+        echo "Saved to: $ARCHIVE"
+        echo "Removed incomplete directory: $DIR"
+    else
+        echo "No project directory was created yet."
+    fi
+
     exit 1
 }
 
 trap cleanup SIGINT
 
-read -p "Project name: " input
+read -r -p "Project name: " input
 
 if [ -z "$input" ]; then
     echo "Need a project name"
@@ -20,36 +34,35 @@ fi
 
 DIR="attendance_tracker_${input}"
 
+if [ -e "$DIR" ]; then
+    echo "Directory already exists: $DIR"
+    echo "Choose a different project name or remove the existing directory."
+    exit 1
+fi
+
 echo "Setting up $DIR..."
 
-mkdir "$DIR"
-mkdir "$DIR/Helpers"
-mkdir "$DIR/reports"
+mkdir -p "$DIR/Helpers" "$DIR/reports"
 
 cp attendance_checker.py "$DIR/"
 cp assets.csv "$DIR/Helpers/"
 cp reports.log "$DIR/reports/"
-
-cat > "$DIR/Helpers/config.json" << 'CONF'
-{
-    "warning_threshold": 75,
-    "failure_threshold": 50
-}
-CONF
+cp config.json "$DIR/Helpers/"
 
 echo ""
-read -p "Change attendance thresholds? (y/n): " change_thresh
+read -r -p "Change attendance thresholds? (y/n): " change_thresh
 
-if [ "$change_thresh" = "y" ]; then
-    read -p "  Warning threshold % (currently 75): " new_warn
-    read -p "  Failure threshold % (currently 50): " new_fail
+if [ "$change_thresh" = "y" ] || [ "$change_thresh" = "Y" ]; then
+    read -r -p "  Warning threshold % (default 75): " new_warn
+    read -r -p "  Failure threshold % (default 50): " new_fail
 
     if [ -n "$new_warn" ]; then
-        sed -i "s/\"warning_threshold\": [0-9]*/\"warning_threshold\": $new_warn/" "$DIR/Helpers/config.json"
+        sed -i.bak "s/\"warning_threshold\": [0-9]*/\"warning_threshold\": $new_warn/" "$DIR/Helpers/config.json"
     fi
     if [ -n "$new_fail" ]; then
-        sed -i "s/\"failure_threshold\": [0-9]*/\"failure_threshold\": $new_fail/" "$DIR/Helpers/config.json"
+        sed -i.bak "s/\"failure_threshold\": [0-9]*/\"failure_threshold\": $new_fail/" "$DIR/Helpers/config.json"
     fi
+    rm -f "$DIR/Helpers/config.json.bak"
     echo "Config updated."
 fi
 
@@ -57,9 +70,9 @@ echo ""
 echo "Checking environment..."
 
 if python3 --version 2>/dev/null; then
-    echo "Python3 found - good"
+    echo "Python3 found - good."
 else
-    echo "Warning: python3 not installed"
+    echo "Warning: python3 not installed."
 fi
 
 echo ""
@@ -84,7 +97,9 @@ if $all_good; then
     echo ""
     echo "Setup done! Run with:"
     echo "  cd $DIR && python3 attendance_checker.py"
+    trap - SIGINT
 else
     echo ""
     echo "Some files missing - check above"
+    exit 1
 fi
