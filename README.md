@@ -69,13 +69,5 @@ python3 attendance_checker.py
 Add your video link here before submitting:
 
 ```text
-Video link:
+Video link: https://drive.google.com/file/d/1e3O_KvjmAwvMHE1013E-sFiqkM65Dp3f/view?usp=sharing
 ```
-
-Suggested video flow:
-
-1. Show the original files: `attendance_checker.py`, `assets.csv`, `config.json`, and `reports.log`.
-2. Run `./setup_project.sh` and enter a project name.
-3. Choose `y` for threshold updates and show that `Helpers/config.json` changed.
-4. Run `python3 attendance_checker.py` inside the generated folder.
-5. Run the script again and press Ctrl+C to show the archive file is created.
