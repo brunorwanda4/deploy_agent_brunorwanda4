@@ -1,6 +1,5 @@
-student_id,name,attended,total
-001,Alice Muhire,18,20
-002,Bruno Rwanda,9,20
-003,Carol Nyiramana,15,20
-004,David Habimana,6,20
-005,Emma Uwase,20,20
+Email,Names,Attendance Count,Absence Count
+alice@example.com,Alice Johnson,14,1
+bob@example.com,Bob Smith,7,8
+charlie@example.com,Charlie Davis,4,11
+diana@example.com,Diana Prince,15,0
