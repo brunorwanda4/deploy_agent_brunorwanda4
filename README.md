@@ -69,7 +69,7 @@ python3 attendance_checker.py
 Add your video link here before submitting:
 
 ```text
-Video link: PASTE_YOUR_VIDEO_LINK_HERE
+Video link:
 ```
 
 Suggested video flow:

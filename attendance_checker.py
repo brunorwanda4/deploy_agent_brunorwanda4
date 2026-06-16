@@ -1,60 +1,45 @@
-import json
 import csv
+import json
+import os
 from datetime import datetime
 
-
-def load_config():
+def run_attendance_check():
+    # 1. Load Config
     with open('Helpers/config.json', 'r') as f:
-        return json.load(f)
+        config = json.load(f)
+    
+    # 2. Archive old reports.log if it exists
+    if os.path.exists('reports/reports.log'):
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        os.rename('reports/reports.log', f'reports/reports_{timestamp}.log.archive')
 
-
-def check_attendance():
-    config = load_config()
-    warning_threshold = config.get('warning_threshold', 75)
-    failure_threshold = config.get('failure_threshold', 50)
-
-    results = []
-
-    with open('Helpers/assets.csv', 'r') as f:
+    # 3. Process Data
+    with open('Helpers/assets.csv', mode='r') as f, open('reports/reports.log', 'w') as log:
         reader = csv.DictReader(f)
+        total_sessions = config['total_sessions']
+        
+        log.write(f"--- Attendance Report Run: {datetime.now()} ---\n")
+        
         for row in reader:
-            attended = int(row['attended'])
-            total = int(row['total'])
-            if total > 0:
-                percentage = (attended / total) * 100
-            else:
-                percentage = 0
+            name = row['Names']
+            email = row['Email']
+            attended = int(row['Attendance Count'])
+            
+            # Simple Math: (Attended / Total) * 100
+            attendance_pct = (attended / total_sessions) * 100
+            
+            message = ""
+            if attendance_pct < config['thresholds']['failure']:
+                message = f"URGENT: {name}, your attendance is {attendance_pct:.1f}%. You will fail this class."
+            elif attendance_pct < config['thresholds']['warning']:
+                message = f"WARNING: {name}, your attendance is {attendance_pct:.1f}%. Please be careful."
+            
+            if message:
+                if config['run_mode'] == "live":
+                    log.write(f"[{datetime.now()}] ALERT SENT TO {email}: {message}\n")
+                    print(f"Logged alert for {name}")
+                else:
+                    print(f"[DRY RUN] Email to {email}: {message}")
 
-            if percentage < failure_threshold:
-                status = "FAIL"
-            elif percentage < warning_threshold:
-                status = "WARNING"
-            else:
-                status = "PASS"
-
-            results.append({
-                'id': row['student_id'],
-                'name': row['name'],
-                'percentage': percentage,
-                'status': status
-            })
-
-    return results
-
-
-def log_results(results):
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    with open('reports/reports.log', 'a') as f:
-        f.write(f"\n=== Report: {timestamp} ===\n")
-        for r in results:
-            f.write(f"{r['id']} | {r['name']} | {r['percentage']:.1f}% | {r['status']}\n")
-
-
-if __name__ == '__main__':
-    results = check_attendance()
-    print(f"{'ID':<6} {'Name':<16} {'Attendance':>10} {'Status':>8}")
-    print("-" * 44)
-    for r in results:
-        print(f"{r['id']:<6} {r['name']:<16} {r['percentage']:>9.1f}% {r['status']:>8}")
-    log_results(results)
-    print("\nResults saved to reports/reports.log")
+if __name__ == "__main__":
+    run_attendance_check()
