@@ -1,6 +1,4 @@
-#!/bin/bash
-
-set -u
+#!/usr/bin/env bash
 
 input=""
 DIR=""
@@ -52,9 +50,26 @@ cp config.json "$DIR/Helpers/"
 echo ""
 read -r -p "Change attendance thresholds? (y/n): " change_thresh
 
+read_threshold() {
+    local prompt="$1" value
+    while true; do
+        read -r -p "$prompt" value
+        if [ -z "$value" ]; then
+            # empty -> keep default
+            printf '%s' ""
+            return 0
+        fi
+        if [[ "$value" =~ ^[0-9]+$ ]] && [ "$value" -ge 1 ] && [ "$value" -le 100 ]; then
+            printf '%s' "$value"
+            return 0
+        fi
+        echo "  Invalid: enter a whole number from 1 to 100 (or leave blank)." >&2
+    done
+}
+
 if [ "$change_thresh" = "y" ] || [ "$change_thresh" = "Y" ]; then
-    read -r -p "  Warning threshold % (default 75): " new_warn
-    read -r -p "  Failure threshold % (default 50): " new_fail
+    new_warn=$(read_threshold "  Warning threshold % (default 75): ")
+    new_fail=$(read_threshold "  Failure threshold % (default 50): ")
 
     if [ -n "$new_warn" ]; then
         sed -i.bak "s/\"warning_threshold\": [0-9]*/\"warning_threshold\": $new_warn/" "$DIR/Helpers/config.json"
