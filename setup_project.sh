@@ -44,8 +44,8 @@ mkdir -p "$DIR/Helpers" "$DIR/reports"
 
 cp attendance_checker.py "$DIR/"
 cp assets.csv "$DIR/Helpers/"
-cp reports.log "$DIR/reports/"
 cp config.json "$DIR/Helpers/"
+cp reports.log "$DIR/reports/"
 
 echo ""
 read -r -p "Change attendance thresholds? (y/n): " change_thresh
